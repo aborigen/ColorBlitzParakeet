@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, Trophy, RotateCcw, Info, Zap, Volume2, VolumeX } from 'lucide-react';
+import { Play, Trophy, RotateCcw, Info, Zap, Volume2, VolumeX, Languages } from 'lucide-react';
 import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, YandexSDK, getLanguage } from '@/lib/yandex-sdk';
 import { aiCreatedColorFact } from '@/ai/flows/ai-created-color-fact-flow';
 import { t, tColor, Language } from '@/lib/i18n';
@@ -145,11 +145,25 @@ export default function GameContainer() {
   }, [targetColor.hex, generateLevel, score]);
 
   const toggleMute = () => setIsMuted(prev => !prev);
+  const toggleLanguage = () => setLang(prev => prev === 'en' ? 'ru' : 'en');
 
   return (
     <div className="flex flex-col items-center justify-between h-[100dvh] w-full p-4 max-w-md mx-auto relative overflow-hidden bg-background">
       <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-3xl -z-10" />
+
+      {/* Top Bar Controls */}
+      <div className="absolute top-4 left-4 z-20">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={toggleLanguage} 
+          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80 h-10 px-4 shadow-sm border border-white/20 font-black text-xs flex gap-2 items-center"
+        >
+          <Languages className="w-4 h-4 text-primary" />
+          <span className="uppercase">{lang}</span>
+        </Button>
+      </div>
 
       <div className="absolute top-4 right-4 z-20">
         <Button 
