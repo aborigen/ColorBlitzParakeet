@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, Trophy, RotateCcw, Info, Zap } from 'lucide-react';
+import { Play, Trophy, RotateCcw, Info, Zap, Volume2, VolumeX } from 'lucide-react';
 import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, YandexSDK } from '@/lib/yandex-sdk';
 import { aiCreatedColorFact } from '@/ai/flows/ai-created-color-fact-flow';
 
@@ -25,6 +25,8 @@ const COLORS_POOL = [
   { name: 'Gold', hex: '#FFD700' },
 ];
 
+const BG_MUSIC_URL = 'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3';
+
 export default function GameContainer() {
   const [gameState, setGameState] = useState<GameState>('START');
   const [score, setScore] = useState(0);
@@ -35,21 +37,39 @@ export default function GameContainer() {
   const [loadingFact, setLoadingFact] = useState(false);
   const [feedback, setFeedback] = useState<'CORRECT' | 'WRONG' | null>(null);
   const [sdk, setSdk] = useState<YandexSDK | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     initYandexSDK().then(setSdk);
+    
+    // Initialize audio
+    const audio = new Audio(BG_MUSIC_URL);
+    audio.loop = true;
+    audioRef.current = audio;
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
+
+  // Sync mute state with audio element
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
 
   const generateLevel = useCallback(() => {
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
     
-    // Difficulty progression: more choices as score increases
     const numChoices = Math.min(6, 3 + Math.floor(score / 5));
     
     const shuffledPool = [...COLORS_POOL].sort(() => 0.5 - Math.random());
@@ -65,7 +85,6 @@ export default function GameContainer() {
     if (timerRef.current) clearInterval(timerRef.current);
     setGameState('GAMEOVER');
     
-    // AI Fact Integration
     setLoadingFact(true);
     try {
       const result = await aiCreatedColorFact({ colorName: finalColorName });
@@ -76,18 +95,15 @@ export default function GameContainer() {
       setLoadingFact(false);
     }
 
-    // Yandex SDK: Show ad every few games
     if (Math.random() > 0.6) {
       await showFullscreenAd(sdk);
     }
     
-    // Yandex SDK: Submit leaderboard
     if (finalScore > 0) {
       submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
   }, [sdk]);
 
-  // Check for game over condition in an effect instead of a state updater
   useEffect(() => {
     if (gameState === 'PLAYING' && timer <= 0) {
       endGame(score, targetColor.name);
@@ -97,7 +113,7 @@ export default function GameContainer() {
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setTimer((prev) => Math.max(0, prev - 2)); // Purely calculate next state
+      setTimer((prev) => Math.max(0, prev - 2));
     }, 100);
   }, []);
 
@@ -108,6 +124,11 @@ export default function GameContainer() {
     setFeedback(null);
     generateLevel();
     startTimer();
+
+    // Start audio on user interaction
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.log("Audio playback blocked by browser"));
+    }
   }, [generateLevel, startTimer]);
 
   const handleChoice = useCallback((color: typeof targetColor) => {
@@ -119,15 +140,29 @@ export default function GameContainer() {
     } else {
       setFeedback('WRONG');
       setTimeout(() => setFeedback(null), 300);
-      setTimer(t => Math.max(0, t - 20)); // Penalty
+      setTimer(t => Math.max(0, t - 20));
     }
   }, [targetColor.hex, generateLevel]);
+
+  const toggleMute = () => setIsMuted(prev => !prev);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 max-w-md mx-auto relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-3xl -z-10" />
+
+      {/* Settings bar */}
+      <div className="absolute top-6 right-6 z-10">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleMute} 
+          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80"
+        >
+          {isMuted ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
+        </Button>
+      </div>
 
       {gameState === 'START' && (
         <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
