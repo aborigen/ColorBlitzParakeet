@@ -10,7 +10,12 @@ import { t, tColor, Language } from '@/lib/i18n';
 
 type GameState = 'START' | 'PLAYING' | 'GAMEOVER';
 
-const COLORS_POOL = [
+interface ColorOption {
+  name: string;
+  hex: string;
+}
+
+const COLORS_POOL: ColorOption[] = [
   { name: 'Red', hex: '#FF0000' },
   { name: 'Blue', hex: '#0000FF' },
   { name: 'Green', hex: '#00FF00' },
@@ -20,19 +25,29 @@ const COLORS_POOL = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00FF' },
+  { name: 'Fuchsia', hex: '#FF00A0' }, // Changed hex to be unique from Magenta
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
 
 const BG_MUSIC_URL = 'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3';
 
+// Proper Fisher-Yates shuffle
+const shuffle = <T,>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 export default function GameContainer() {
   const [gameState, setGameState] = useState<GameState>('START');
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(100);
-  const [targetColor, setTargetColor] = useState(COLORS_POOL[0]);
-  const [choices, setChoices] = useState(COLORS_POOL.slice(0, 3));
+  const [targetColor, setTargetColor] = useState<ColorOption>(COLORS_POOL[0]);
+  const [choices, setChoices] = useState<ColorOption[]>([]);
   const [fact, setFact] = useState<string | null>(null);
   const [loadingFact, setLoadingFact] = useState(false);
   const [feedback, setFeedback] = useState<'CORRECT' | 'WRONG' | null>(null);
@@ -74,10 +89,16 @@ export default function GameContainer() {
     
     // Level 1 starts with 3 choices. Every 5 points we increase complexity up to 6 choices.
     const numChoices = Math.min(6, 3 + Math.floor(currentScore / 5));
+    
+    // Filter out the correct hex from the pool to get candidates for "wrong" answers
     const wrongChoicesPool = COLORS_POOL.filter(c => c.hex !== correctColor.hex);
-    const shuffledPool = [...wrongChoicesPool].sort(() => Math.random() - 0.5);
-    const selectedWrongOnes = shuffledPool.slice(0, numChoices - 1);
-    const finalChoices = [...selectedWrongOnes, correctColor].sort(() => Math.random() - 0.5);
+    
+    // Shuffle the wrong pool and pick needed amount
+    const shuffledWrongPool = shuffle(wrongChoicesPool);
+    const selectedWrongOnes = shuffledWrongPool.slice(0, numChoices - 1);
+    
+    // Combine correct one with wrong ones and shuffle again for final layout
+    const finalChoices = shuffle([...selectedWrongOnes, correctColor]);
     
     setTargetColor(correctColor);
     setChoices(finalChoices);
@@ -131,7 +152,7 @@ export default function GameContainer() {
     }
   }, [generateLevel]);
 
-  const handleChoice = useCallback((color: typeof targetColor) => {
+  const handleChoice = useCallback((color: ColorOption) => {
     if (color.hex === targetColor.hex) {
       const nextScore = score + 1;
       setScore(nextScore);
@@ -165,7 +186,7 @@ export default function GameContainer() {
         </Button>
       </div>
 
-      {/* Language Toggle - Moved to Bottom-Right */}
+      {/* Language Toggle */}
       <div className="absolute bottom-4 right-4 z-30">
         <Button 
           variant="ghost" 
@@ -259,7 +280,7 @@ export default function GameContainer() {
           <div className="w-full flex flex-wrap justify-center gap-3 pb-16">
             {choices.map((choice, i) => (
               <button
-                key={i}
+                key={`${choice.name}-${i}`}
                 onClick={() => handleChoice(choice)}
                 className={`
                   ${choices.length > 4 ? 'w-[calc(33%-8px)]' : 'w-[calc(50%-6px)]'} 
