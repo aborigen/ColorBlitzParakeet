@@ -15,6 +15,12 @@ interface ColorOption {
   hex: string;
 }
 
+interface LevelData {
+  target: ColorOption;
+  choices: ColorOption[];
+  id: number;
+}
+
 const COLORS_POOL: ColorOption[] = [
   { name: 'Red', hex: '#FF0000' },
   { name: 'Blue', hex: '#0000FF' },
@@ -25,14 +31,13 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00A0' }, // Changed hex to be unique from Magenta
+  { name: 'Fuchsia', hex: '#FF00A0' },
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
 
 const BG_MUSIC_URL = 'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3';
 
-// Proper Fisher-Yates shuffle
 const shuffle = <T,>(array: T[]): T[] => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -46,8 +51,7 @@ export default function GameContainer() {
   const [gameState, setGameState] = useState<GameState>('START');
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(100);
-  const [targetColor, setTargetColor] = useState<ColorOption>(COLORS_POOL[0]);
-  const [choices, setChoices] = useState<ColorOption[]>([]);
+  const [level, setLevel] = useState<LevelData | null>(null);
   const [fact, setFact] = useState<string | null>(null);
   const [loadingFact, setLoadingFact] = useState(false);
   const [feedback, setFeedback] = useState<'CORRECT' | 'WRONG' | null>(null);
@@ -87,21 +91,17 @@ export default function GameContainer() {
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
     
-    // Level 1 starts with 3 choices. Every 5 points we increase complexity up to 6 choices.
     const numChoices = Math.min(6, 3 + Math.floor(currentScore / 5));
-    
-    // Filter out the correct hex from the pool to get candidates for "wrong" answers
     const wrongChoicesPool = COLORS_POOL.filter(c => c.hex !== correctColor.hex);
-    
-    // Shuffle the wrong pool and pick needed amount
     const shuffledWrongPool = shuffle(wrongChoicesPool);
     const selectedWrongOnes = shuffledWrongPool.slice(0, numChoices - 1);
-    
-    // Combine correct one with wrong ones and shuffle again for final layout
     const finalChoices = shuffle([...selectedWrongOnes, correctColor]);
     
-    setTargetColor(correctColor);
-    setChoices(finalChoices);
+    setLevel({
+      target: correctColor,
+      choices: finalChoices,
+      id: Date.now()
+    });
     setTimer(100);
   }, []);
 
@@ -130,7 +130,9 @@ export default function GameContainer() {
   useEffect(() => {
     if (gameState === 'PLAYING') {
       if (timer <= 0) {
-        endGame(score, targetColor.name);
+        if (level) {
+          endGame(score, level.target.name);
+        }
       } else {
         const id = setInterval(() => {
           setTimer((prev) => Math.max(0, prev - 2.5));
@@ -138,22 +140,24 @@ export default function GameContainer() {
         return () => clearInterval(id);
       }
     }
-  }, [gameState, timer, score, targetColor.name, endGame]);
+  }, [gameState, timer, score, level, endGame]);
 
   const startGame = useCallback(async () => {
     setScore(0);
-    setGameState('PLAYING');
     setFact(null);
     setFeedback(null);
     generateLevel(0);
+    setGameState('PLAYING');
 
     if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log("Audio playback blocked by browser"));
+      audioRef.current.play().catch(e => console.log("Audio blocked"));
     }
   }, [generateLevel]);
 
   const handleChoice = useCallback((color: ColorOption) => {
-    if (color.hex === targetColor.hex) {
+    if (!level) return;
+    
+    if (color.hex === level.target.hex) {
       const nextScore = score + 1;
       setScore(nextScore);
       setFeedback('CORRECT');
@@ -164,7 +168,7 @@ export default function GameContainer() {
       setTimeout(() => setFeedback(null), 400);
       setTimer(t => Math.max(0, t - 15));
     }
-  }, [targetColor.hex, generateLevel, score]);
+  }, [level, generateLevel, score]);
 
   const toggleMute = () => setIsMuted(prev => !prev);
   const toggleLanguage = () => setLang(prev => prev === 'en' ? 'ru' : 'en');
@@ -238,7 +242,7 @@ export default function GameContainer() {
         </div>
       )}
 
-      {gameState === 'PLAYING' && (
+      {gameState === 'PLAYING' && level && (
         <div className={`w-full h-full flex flex-col justify-between py-2 space-y-4 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
           <div className="w-full flex justify-between items-center px-2 pt-2">
              <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-primary/10">
@@ -265,7 +269,7 @@ export default function GameContainer() {
               <div className="absolute -inset-4 bg-white/40 blur-2xl rounded-full" />
               <div 
                 className={`w-40 h-40 sm:w-48 sm:h-48 rounded-[3rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
-                style={{ backgroundColor: targetColor.hex }}
+                style={{ backgroundColor: level.target.hex }}
               />
               {feedback === 'CORRECT' && (
                 <div className="absolute -top-4 -right-4 bg-green-500 text-white p-2 rounded-full shadow-lg z-20 animate-bounce">
@@ -274,16 +278,16 @@ export default function GameContainer() {
               )}
             </div>
             
-            <p className="text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, targetColor.name)}</p>
+            <p className="text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
           </div>
 
-          <div className="w-full flex flex-wrap justify-center gap-3 pb-16">
-            {choices.map((choice, i) => (
+          <div key={level.id} className="w-full flex flex-wrap justify-center gap-3 pb-16">
+            {level.choices.map((choice, i) => (
               <button
                 key={`${choice.name}-${i}`}
                 onClick={() => handleChoice(choice)}
                 className={`
-                  ${choices.length > 4 ? 'w-[calc(33%-8px)]' : 'w-[calc(50%-6px)]'} 
+                  ${level.choices.length > 4 ? 'w-[calc(33%-8px)]' : 'w-[calc(50%-6px)]'} 
                   aspect-square rounded-2xl shadow-[0_6px_0_rgba(0,0,0,0.1)] hover:shadow-[0_8px_0_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 active:translate-y-1 active:shadow-none relative overflow-hidden border-4 border-white/80
                 `}
                 style={{ backgroundColor: choice.hex }}
