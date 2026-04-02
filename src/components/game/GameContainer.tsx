@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -39,6 +40,9 @@ export default function GameContainer() {
 
   useEffect(() => {
     initYandexSDK().then(setSdk);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
   const generateLevel = useCallback(() => {
@@ -57,49 +61,14 @@ export default function GameContainer() {
     setTimer(100);
   }, [score]);
 
-  const startGame = async () => {
-    setScore(0);
-    setGameState('PLAYING');
-    setFact(null);
-    setFeedback(null);
-    generateLevel();
-    startTimer();
-  };
-
-  const startTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 0) {
-          endGame();
-          return 0;
-        }
-        return prev - 2; // Fast decay for hyper casual feel
-      });
-    }, 100);
-  };
-
-  const handleChoice = (color: typeof targetColor) => {
-    if (color.hex === targetColor.hex) {
-      setScore(s => s + 1);
-      setFeedback('CORRECT');
-      setTimeout(() => setFeedback(null), 300);
-      generateLevel();
-    } else {
-      setFeedback('WRONG');
-      setTimeout(() => setFeedback(null), 300);
-      setTimer(t => Math.max(0, t - 20)); // Penalty
-    }
-  };
-
-  const endGame = async () => {
+  const endGame = useCallback(async (finalScore: number, finalColorName: string) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setGameState('GAMEOVER');
     
     // AI Fact Integration
     setLoadingFact(true);
     try {
-      const result = await aiCreatedColorFact({ colorName: targetColor.name });
+      const result = await aiCreatedColorFact({ colorName: finalColorName });
       setFact(result.fact);
     } catch (e) {
       setFact("Color theory is the art and science of how colors interact!");
@@ -113,10 +82,46 @@ export default function GameContainer() {
     }
     
     // Yandex SDK: Submit leaderboard
-    if (score > 0) {
-      submitScoreToLeaderboard(sdk, 'high_scores', score);
+    if (finalScore > 0) {
+      submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
-  };
+  }, [sdk]);
+
+  // Check for game over condition in an effect instead of a state updater
+  useEffect(() => {
+    if (gameState === 'PLAYING' && timer <= 0) {
+      endGame(score, targetColor.name);
+    }
+  }, [timer, gameState, score, targetColor.name, endGame]);
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimer((prev) => Math.max(0, prev - 2)); // Purely calculate next state
+    }, 100);
+  }, []);
+
+  const startGame = useCallback(async () => {
+    setScore(0);
+    setGameState('PLAYING');
+    setFact(null);
+    setFeedback(null);
+    generateLevel();
+    startTimer();
+  }, [generateLevel, startTimer]);
+
+  const handleChoice = useCallback((color: typeof targetColor) => {
+    if (color.hex === targetColor.hex) {
+      setScore(s => s + 1);
+      setFeedback('CORRECT');
+      setTimeout(() => setFeedback(null), 300);
+      generateLevel();
+    } else {
+      setFeedback('WRONG');
+      setTimeout(() => setFeedback(null), 300);
+      setTimer(t => Math.max(0, t - 20)); // Penalty
+    }
+  }, [targetColor.hex, generateLevel]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 max-w-md mx-auto relative overflow-hidden">
