@@ -38,7 +38,6 @@ export default function GameContainer() {
   const [sdk, setSdk] = useState<YandexSDK | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -49,7 +48,6 @@ export default function GameContainer() {
     audioRef.current = audio;
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -63,21 +61,31 @@ export default function GameContainer() {
     }
   }, [isMuted]);
 
-  const generateLevel = useCallback(() => {
+  const generateLevel = useCallback((currentScore: number) => {
+    // 1. Pick a target color
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
-    const numChoices = Math.min(6, 3 + Math.floor(score / 5));
-    const shuffledPool = [...COLORS_POOL].sort(() => 0.5 - Math.random());
-    const filteredChoices = shuffledPool.filter(c => c.hex !== correctColor.hex).slice(0, numChoices - 1);
-    const finalChoices = [...filteredChoices, correctColor].sort(() => 0.5 - Math.random());
     
+    // 2. Determine number of choices (3 to 6)
+    const numChoices = Math.min(6, 3 + Math.floor(currentScore / 5));
+    
+    // 3. Get wrong choices (filtered by hex to avoid confusing duplicates like Magenta/Fuchsia)
+    const wrongChoicesPool = COLORS_POOL.filter(c => c.hex !== correctColor.hex);
+    
+    // 4. Shuffle pool and take needed amount
+    const shuffledPool = [...wrongChoicesPool].sort(() => Math.random() - 0.5);
+    const selectedWrongOnes = shuffledPool.slice(0, numChoices - 1);
+    
+    // 5. Finalize and shuffle choices - ensuring the correct color is definitely included
+    const finalChoices = [...selectedWrongOnes, correctColor].sort(() => Math.random() - 0.5);
+    
+    // 6. Update states together
     setTargetColor(correctColor);
     setChoices(finalChoices);
     setTimer(100);
-  }, [score]);
+  }, []);
 
   const endGame = useCallback(async (finalScore: number, finalColorName: string) => {
-    if (timerRef.current) clearInterval(timerRef.current);
     setGameState('GAMEOVER');
     
     setLoadingFact(true);
@@ -99,44 +107,45 @@ export default function GameContainer() {
     }
   }, [sdk]);
 
+  // Handle timer countdown and game state transitions
   useEffect(() => {
-    if (gameState === 'PLAYING' && timer <= 0) {
-      endGame(score, targetColor.name);
+    if (gameState === 'PLAYING') {
+      if (timer <= 0) {
+        endGame(score, targetColor.name);
+      } else {
+        const id = setInterval(() => {
+          setTimer((prev) => Math.max(0, prev - 2));
+        }, 100);
+        return () => clearInterval(id);
+      }
     }
-  }, [timer, gameState, score, targetColor.name, endGame]);
-
-  const startTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimer((prev) => Math.max(0, prev - 2));
-    }, 100);
-  }, []);
+  }, [gameState, timer, score, targetColor.name, endGame]);
 
   const startGame = useCallback(async () => {
     setScore(0);
     setGameState('PLAYING');
     setFact(null);
     setFeedback(null);
-    generateLevel();
-    startTimer();
+    generateLevel(0);
 
     if (audioRef.current) {
       audioRef.current.play().catch(e => console.log("Audio playback blocked by browser"));
     }
-  }, [generateLevel, startTimer]);
+  }, [generateLevel]);
 
   const handleChoice = useCallback((color: typeof targetColor) => {
     if (color.hex === targetColor.hex) {
-      setScore(s => s + 1);
+      const nextScore = score + 1;
+      setScore(nextScore);
       setFeedback('CORRECT');
       setTimeout(() => setFeedback(null), 300);
-      generateLevel();
+      generateLevel(nextScore);
     } else {
       setFeedback('WRONG');
       setTimeout(() => setFeedback(null), 300);
       setTimer(t => Math.max(0, t - 20));
     }
-  }, [targetColor.hex, generateLevel]);
+  }, [targetColor.hex, generateLevel, score]);
 
   const toggleMute = () => setIsMuted(prev => !prev);
 
@@ -212,7 +221,7 @@ export default function GameContainer() {
             <p className="text-sm font-bold text-foreground opacity-60 uppercase tracking-widest">{targetColor.name}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 w-full pb-4">
+          <div className={`grid gap-3 w-full pb-4 ${choices.length > 4 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {choices.map((choice, i) => (
               <button
                 key={i}
