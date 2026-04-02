@@ -4,8 +4,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Play, Trophy, RotateCcw, Info, Zap, Volume2, VolumeX } from 'lucide-react';
-import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, YandexSDK } from '@/lib/yandex-sdk';
+import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, YandexSDK, getLanguage } from '@/lib/yandex-sdk';
 import { aiCreatedColorFact } from '@/ai/flows/ai-created-color-fact-flow';
+import { t, tColor, Language } from '@/lib/i18n';
 
 type GameState = 'START' | 'PLAYING' | 'GAMEOVER';
 
@@ -37,11 +38,17 @@ export default function GameContainer() {
   const [feedback, setFeedback] = useState<'CORRECT' | 'WRONG' | null>(null);
   const [sdk, setSdk] = useState<YandexSDK | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [lang, setLang] = useState<Language>('en');
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    initYandexSDK().then(setSdk);
+    initYandexSDK().then(sdkInstance => {
+      setSdk(sdkInstance);
+      if (sdkInstance) {
+        setLang(getLanguage(sdkInstance));
+      }
+    });
     
     const audio = new Audio(BG_MUSIC_URL);
     audio.loop = true;
@@ -62,28 +69,15 @@ export default function GameContainer() {
   }, [isMuted]);
 
   const generateLevel = useCallback((currentScore: number) => {
-    // 1. Pick a target color
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
     
-    // 2. Determine number of choices (3 to 6)
-    // Score 0-4: 3 colors
-    // Score 5-9: 4 colors
-    // Score 10-14: 5 colors
-    // Score 15+: 6 colors
     const numChoices = Math.min(6, 3 + Math.floor(currentScore / 5));
-    
-    // 3. Get wrong choices (filtered by hex to avoid confusing duplicates)
     const wrongChoicesPool = COLORS_POOL.filter(c => c.hex !== correctColor.hex);
-    
-    // 4. Shuffle pool and take needed amount
     const shuffledPool = [...wrongChoicesPool].sort(() => Math.random() - 0.5);
     const selectedWrongOnes = shuffledPool.slice(0, numChoices - 1);
-    
-    // 5. Finalize and shuffle choices - ensuring the correct color is definitely included
     const finalChoices = [...selectedWrongOnes, correctColor].sort(() => Math.random() - 0.5);
     
-    // 6. Update states
     setTargetColor(correctColor);
     setChoices(finalChoices);
     setTimer(100);
@@ -94,10 +88,10 @@ export default function GameContainer() {
     
     setLoadingFact(true);
     try {
-      const result = await aiCreatedColorFact({ colorName: finalColorName });
+      const result = await aiCreatedColorFact({ colorName: finalColorName, lang });
       setFact(result.fact);
     } catch (e) {
-      setFact("Color theory is the art and science of how colors interact!");
+      setFact(t(lang, 'factFallback'));
     } finally {
       setLoadingFact(false);
     }
@@ -109,16 +103,15 @@ export default function GameContainer() {
     if (finalScore > 0) {
       submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
-  }, [sdk]);
+  }, [sdk, lang]);
 
-  // Handle timer countdown and game state transitions
   useEffect(() => {
     if (gameState === 'PLAYING') {
       if (timer <= 0) {
         endGame(score, targetColor.name);
       } else {
         const id = setInterval(() => {
-          setTimer((prev) => Math.max(0, prev - 2.5)); // Slightly faster timer
+          setTimer((prev) => Math.max(0, prev - 2.5));
         }, 100);
         return () => clearInterval(id);
       }
@@ -155,11 +148,9 @@ export default function GameContainer() {
 
   return (
     <div className="flex flex-col items-center justify-between h-[100dvh] w-full p-4 max-w-md mx-auto relative overflow-hidden bg-background">
-      {/* Background decoration */}
       <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-3xl -z-10" />
 
-      {/* Settings bar */}
       <div className="absolute top-4 right-4 z-20">
         <Button 
           variant="ghost" 
@@ -179,8 +170,10 @@ export default function GameContainer() {
                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce">
                  <Zap className="w-10 h-10 text-primary fill-current" />
                </div>
-               <h1 className="text-4xl font-black text-foreground mb-1 tracking-tight leading-none uppercase">Color Dash<br /><span className="text-secondary">Blitz</span></h1>
-               <p className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em] mt-2">The Ultimate Matcher</p>
+               <h1 className="text-4xl font-black text-foreground mb-1 tracking-tight leading-none uppercase">
+                 {t(lang, 'title')}<br /><span className="text-secondary">{t(lang, 'titleSuffix')}</span>
+               </h1>
+               <p className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em] mt-2">{t(lang, 'subtitle')}</p>
              </div>
           </div>
           
@@ -190,18 +183,18 @@ export default function GameContainer() {
               size="lg" 
               className="w-full h-20 text-2xl font-black bg-primary hover:bg-primary/90 text-white rounded-[1.5rem] shadow-[0_8px_0_rgb(220,38,38)] hover:translate-y-[2px] hover:shadow-[0_6px_0_rgb(220,38,38)] active:translate-y-[6px] active:shadow-[0_2px_0_rgb(220,38,38)] transition-all flex flex-col gap-0 items-center justify-center pt-2"
             >
-              <span>PLAY NOW</span>
-              <span className="text-[10px] font-bold opacity-70 tracking-widest">START BLITZING</span>
+              <span>{t(lang, 'playNow')}</span>
+              <span className="text-[10px] font-bold opacity-70 tracking-widest">{t(lang, 'startBlitzing')}</span>
             </Button>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/50 backdrop-blur-sm p-3 rounded-2xl border border-white/50 flex flex-col items-center justify-center text-center">
                 <Trophy className="w-5 h-5 mb-1 text-secondary" />
-                <span className="text-[9px] uppercase font-black text-muted-foreground">Leaderboards</span>
+                <span className="text-[9px] uppercase font-black text-muted-foreground">{t(lang, 'leaderboards')}</span>
               </div>
               <div className="bg-white/50 backdrop-blur-sm p-3 rounded-2xl border border-white/50 flex flex-col items-center justify-center text-center">
                 <Zap className="w-5 h-5 mb-1 text-primary" />
-                <span className="text-[9px] uppercase font-black text-muted-foreground">Quick Reflex</span>
+                <span className="text-[9px] uppercase font-black text-muted-foreground">{t(lang, 'quickReflex')}</span>
               </div>
             </div>
           </div>
@@ -227,7 +220,7 @@ export default function GameContainer() {
 
           <div className="flex-1 flex flex-col items-center justify-center space-y-6">
             <div className="text-center space-y-1">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Match This Color</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t(lang, 'matchThis')}</h2>
               <div className="h-1 w-8 bg-primary/20 mx-auto rounded-full" />
             </div>
             
@@ -244,10 +237,9 @@ export default function GameContainer() {
               )}
             </div>
             
-            <p className="text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{targetColor.name}</p>
+            <p className="text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, targetColor.name)}</p>
           </div>
 
-          {/* Flexible grid for buttons: Handles 3, 4, 5, or 6 items centered */}
           <div className="w-full flex flex-wrap justify-center gap-3 pb-6">
             {choices.map((choice, i) => (
               <button
@@ -270,9 +262,9 @@ export default function GameContainer() {
         <div className="flex flex-col items-center justify-center h-full w-full space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-y-auto no-scrollbar py-6">
           <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl border-t-8 border-primary w-full text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12" />
-            <h2 className="text-2xl font-black text-foreground mb-4 uppercase tracking-tight">Blitz Over!</h2>
+            <h2 className="text-2xl font-black text-foreground mb-4 uppercase tracking-tight">{t(lang, 'blitzOver')}</h2>
             <div className="text-7xl font-black text-primary mb-2 tracking-tighter tabular-nums">{score}</div>
-            <p className="text-xs text-muted-foreground font-black uppercase tracking-[0.2em]">Final Score</p>
+            <p className="text-xs text-muted-foreground font-black uppercase tracking-[0.2em]">{t(lang, 'finalScore')}</p>
           </div>
 
           <div className="w-full space-y-4">
@@ -280,7 +272,7 @@ export default function GameContainer() {
               <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-secondary/20 relative group w-full shadow-sm">
                 <div className="absolute -top-3 left-6 bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest flex items-center gap-1 shadow-md">
                   <Info className="w-3 h-3" />
-                  COLOR FACT
+                  {t(lang, 'colorFact')}
                 </div>
                 <p className="text-sm font-medium text-foreground/80 leading-relaxed text-center pt-2">
                   {fact}
@@ -302,7 +294,7 @@ export default function GameContainer() {
                 className="h-16 text-xl font-black bg-primary hover:bg-primary/90 rounded-2xl shadow-[0_6px_0_rgb(220,38,38)] active:translate-y-1 active:shadow-none transition-all w-full"
               >
                 <RotateCcw className="w-6 h-6 mr-2" />
-                RETRY BLITZ
+                {t(lang, 'retryBlitz')}
               </Button>
               <Button 
                 variant="outline" 
@@ -310,7 +302,7 @@ export default function GameContainer() {
                 size="lg" 
                 className="h-14 text-sm font-black border-2 border-muted rounded-2xl text-muted-foreground hover:bg-muted transition-all w-full uppercase tracking-widest"
               >
-                MAIN MENU
+                {t(lang, 'mainMenu')}
               </Button>
             </div>
           </div>

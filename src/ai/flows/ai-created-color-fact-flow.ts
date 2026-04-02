@@ -18,6 +18,10 @@ const AiCreatedColorFactInputSchema = z
       .describe(
         'An optional color name to base the fact on. If not provided, a general color theory fact will be generated.'
       ),
+    lang: z
+      .enum(['en', 'ru'])
+      .default('en')
+      .describe('The language in which to generate the fact.'),
   })
   .describe('Input for generating a fun color fact.');
 export type AiCreatedColorFactInput = z.infer<typeof AiCreatedColorFactInputSchema>;
@@ -41,6 +45,8 @@ const prompt = ai.definePrompt({
   output: {schema: AiCreatedColorFactOutputSchema},
   prompt: `You are an expert on color theory and fun facts.
 Generate a single, concise, and fun fact about colors or color theory.
+
+The fact MUST be written in the following language: {{lang}}.
 
 {{#if colorName}}
 Focus the fact on the color: {{{colorName}}}.

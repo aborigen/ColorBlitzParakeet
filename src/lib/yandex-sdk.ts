@@ -7,6 +7,11 @@ export interface YandexSDK {
     showRewardedVideo: (callbacks: { onOpen?: () => void; onRewarded?: () => void; onClose?: () => void; onError?: (error: any) => void }) => void;
   };
   getLeaderboards: () => Promise<any>;
+  environment: {
+    i18n: {
+      lang: string;
+    };
+  };
 }
 
 export async function initYandexSDK(): Promise<YandexSDK | null> {
@@ -38,4 +43,10 @@ export async function submitScoreToLeaderboard(sdk: YandexSDK | null, leaderboar
   } catch (err) {
     console.error('Leaderboard error:', err);
   }
+}
+
+export function getLanguage(sdk: YandexSDK | null): 'en' | 'ru' {
+  if (!sdk) return 'en';
+  const lang = sdk.environment.i18n.lang;
+  return lang.startsWith('ru') ? 'ru' : 'en';
 }
