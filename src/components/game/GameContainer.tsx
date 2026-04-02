@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -45,7 +44,6 @@ export default function GameContainer() {
   useEffect(() => {
     initYandexSDK().then(setSdk);
     
-    // Initialize audio
     const audio = new Audio(BG_MUSIC_URL);
     audio.loop = true;
     audioRef.current = audio;
@@ -59,7 +57,6 @@ export default function GameContainer() {
     };
   }, []);
 
-  // Sync mute state with audio element
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.muted = isMuted;
@@ -69,9 +66,7 @@ export default function GameContainer() {
   const generateLevel = useCallback(() => {
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
-    
     const numChoices = Math.min(6, 3 + Math.floor(score / 5));
-    
     const shuffledPool = [...COLORS_POOL].sort(() => 0.5 - Math.random());
     const filteredChoices = shuffledPool.filter(c => c.hex !== correctColor.hex).slice(0, numChoices - 1);
     const finalChoices = [...filteredChoices, correctColor].sort(() => 0.5 - Math.random());
@@ -125,7 +120,6 @@ export default function GameContainer() {
     generateLevel();
     startTimer();
 
-    // Start audio on user interaction
     if (audioRef.current) {
       audioRef.current.play().catch(e => console.log("Audio playback blocked by browser"));
     }
@@ -147,83 +141,83 @@ export default function GameContainer() {
   const toggleMute = () => setIsMuted(prev => !prev);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 max-w-md mx-auto relative overflow-hidden">
+    <div className="flex flex-col items-center justify-between h-[100dvh] w-full p-4 max-w-md mx-auto relative overflow-hidden bg-background">
       {/* Background decoration */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-3xl -z-10" />
+      <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-3xl -z-10" />
+      <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-3xl -z-10" />
 
       {/* Settings bar */}
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute top-4 right-4 z-20">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={toggleMute} 
-          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80"
+          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80 h-10 w-10"
         >
           {isMuted ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
         </Button>
       </div>
 
       {gameState === 'START' && (
-        <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
-          <div className="relative inline-block">
-             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-             <div className="relative bg-white p-8 rounded-2xl shadow-xl">
-               <Zap className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
-               <h1 className="text-4xl font-black text-foreground mb-2">Color Dash <span className="text-secondary">Blitz</span></h1>
-               <p className="text-muted-foreground font-medium">Test your reaction speed!</p>
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-6 animate-in fade-in zoom-in duration-500">
+          <div className="relative inline-block text-center">
+             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25"></div>
+             <div className="relative bg-white p-6 rounded-2xl shadow-xl">
+               <Zap className="w-12 h-12 text-primary mx-auto mb-2 animate-pulse" />
+               <h1 className="text-3xl font-black text-foreground mb-1 leading-tight">Color Dash <span className="text-secondary">Blitz</span></h1>
+               <p className="text-sm text-muted-foreground font-medium">Test your reaction speed!</p>
              </div>
           </div>
           
           <Button 
             onClick={startGame} 
             size="lg" 
-            className="w-full h-20 text-2xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 group"
+            className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 group"
           >
-            <Play className="w-8 h-8 mr-2 fill-current group-hover:rotate-12 transition-transform" />
+            <Play className="w-6 h-6 mr-2 fill-current group-hover:rotate-12 transition-transform" />
             PLAY NOW
           </Button>
 
-          <div className="flex justify-center gap-4 text-muted-foreground">
+          <div className="flex justify-center gap-6 text-muted-foreground">
             <div className="flex flex-col items-center">
-              <Trophy className="w-6 h-6 mb-1 text-secondary" />
-              <span className="text-xs uppercase font-bold tracking-widest">Compete</span>
+              <Trophy className="w-5 h-5 mb-1 text-secondary" />
+              <span className="text-[10px] uppercase font-bold tracking-widest">Compete</span>
             </div>
             <div className="flex flex-col items-center">
-              <Zap className="w-6 h-6 mb-1 text-primary" />
-              <span className="text-xs uppercase font-bold tracking-widest">Fast Pace</span>
+              <Zap className="w-5 h-5 mb-1 text-primary" />
+              <span className="text-[10px] uppercase font-bold tracking-widest">Fast Pace</span>
             </div>
           </div>
         </div>
       )}
 
       {gameState === 'PLAYING' && (
-        <div className={`w-full flex flex-col items-center space-y-8 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
-          <div className="w-full flex justify-between items-center mb-4">
-             <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-secondary" />
-                <span className="text-xl font-black text-foreground">{score}</span>
+        <div className={`w-full h-full flex flex-col justify-between py-2 space-y-4 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
+          <div className="w-full flex justify-between items-center px-2 pt-2">
+             <div className="bg-white/80 backdrop-blur px-3 py-1 rounded-full shadow-sm flex items-center gap-2 border">
+                <Trophy className="w-4 h-4 text-secondary" />
+                <span className="text-lg font-black text-foreground">{score}</span>
              </div>
-             <div className="flex-1 max-w-[200px] ml-4">
-                <Progress value={timer} className="h-4 bg-white/50 border border-primary/20" />
+             <div className="flex-1 max-w-[140px] ml-4">
+                <Progress value={timer} className="h-3 bg-white/50 border border-primary/20" />
              </div>
           </div>
 
-          <div className="text-center space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Match This Color</h2>
+          <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground text-center">Match This Color</h2>
             <div 
-              className={`w-48 h-48 rounded-[3rem] shadow-2xl transition-transform ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
+              className={`w-32 h-32 sm:w-40 sm:h-40 rounded-[2.5rem] shadow-2xl transition-transform border-4 border-white ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
               style={{ backgroundColor: targetColor.hex }}
             />
-            <p className="text-lg font-bold text-foreground opacity-50">{targetColor.name}</p>
+            <p className="text-sm font-bold text-foreground opacity-60 uppercase tracking-widest">{targetColor.name}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 w-full">
+          <div className="grid grid-cols-2 gap-3 w-full pb-4">
             {choices.map((choice, i) => (
               <button
                 key={i}
                 onClick={() => handleChoice(choice)}
-                className="aspect-square rounded-3xl shadow-md hover:shadow-xl transition-all hover:scale-[1.02] active:scale-90 relative overflow-hidden group"
+                className="aspect-video sm:aspect-square rounded-2xl shadow-md hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95 relative overflow-hidden group border-2 border-white/50"
                 style={{ backgroundColor: choice.hex }}
               >
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
@@ -234,43 +228,43 @@ export default function GameContainer() {
       )}
 
       {gameState === 'GAMEOVER' && (
-        <div className="text-center space-y-6 w-full animate-in fade-in slide-in-from-bottom-8 duration-500">
-          <div className="bg-white p-8 rounded-3xl shadow-xl border-t-4 border-primary">
-            <h2 className="text-2xl font-black text-foreground mb-4">Game Over!</h2>
-            <div className="text-6xl font-black text-primary mb-2">{score}</div>
-            <p className="text-muted-foreground font-semibold uppercase tracking-widest">Final Score</p>
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-y-auto no-scrollbar py-4">
+          <div className="bg-white p-6 rounded-3xl shadow-xl border-t-4 border-primary w-full text-center">
+            <h2 className="text-xl font-black text-foreground mb-2">Game Over!</h2>
+            <div className="text-5xl font-black text-primary mb-1">{score}</div>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">Final Score</p>
           </div>
 
           {fact && (
-            <div className="bg-secondary/10 p-6 rounded-3xl border border-secondary/20 relative group">
-              <Info className="w-6 h-6 text-secondary absolute -top-3 -left-3 bg-white rounded-full p-1 border shadow-sm" />
-              <p className="text-sm italic text-foreground/80 leading-relaxed">
+            <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 relative group w-full">
+              <Info className="w-5 h-5 text-secondary absolute -top-2 -left-2 bg-white rounded-full p-1 border shadow-sm" />
+              <p className="text-xs italic text-foreground/80 leading-relaxed text-center">
                 {fact}
               </p>
             </div>
           )}
 
           {loadingFact && (
-            <div className="animate-pulse space-y-2">
-              <div className="h-4 bg-muted rounded w-3/4 mx-auto" />
-              <div className="h-4 bg-muted rounded w-1/2 mx-auto" />
+            <div className="animate-pulse space-y-2 w-full">
+              <div className="h-3 bg-muted rounded w-3/4 mx-auto" />
+              <div className="h-3 bg-muted rounded w-1/2 mx-auto" />
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-3">
+          <div className="flex flex-col gap-2 w-full pt-2">
             <Button 
               onClick={startGame} 
               size="lg" 
-              className="h-16 text-xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-md transition-transform active:scale-95"
+              className="h-14 text-lg font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-md transition-transform active:scale-95 w-full"
             >
-              <RotateCcw className="w-6 h-6 mr-2" />
+              <RotateCcw className="w-5 h-5 mr-2" />
               TRY AGAIN
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setGameState('START')} 
               size="lg" 
-              className="h-16 text-lg font-bold border-2 rounded-2xl text-muted-foreground hover:bg-muted"
+              className="h-14 text-sm font-bold border-2 rounded-2xl text-muted-foreground hover:bg-muted w-full"
             >
               MAIN MENU
             </Button>
