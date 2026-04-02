@@ -32,7 +32,7 @@ export default function GameContainer() {
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(100);
   const [targetColor, setTargetColor] = useState(COLORS_POOL[0]);
-  const [choices, setChoices] = useState(COLORS_POOL.slice(0, 4));
+  const [choices, setChoices] = useState(COLORS_POOL.slice(0, 3));
   const [fact, setFact] = useState<string | null>(null);
   const [loadingFact, setLoadingFact] = useState(false);
   const [feedback, setFeedback] = useState<'CORRECT' | 'WRONG' | null>(null);
@@ -72,6 +72,7 @@ export default function GameContainer() {
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
     
+    // Level 1 starts with 3 choices. Every 5 points we increase complexity up to 6 choices.
     const numChoices = Math.min(6, 3 + Math.floor(currentScore / 5));
     const wrongChoicesPool = COLORS_POOL.filter(c => c.hex !== correctColor.hex);
     const shuffledPool = [...wrongChoicesPool].sort(() => Math.random() - 0.5);
@@ -153,18 +154,6 @@ export default function GameContainer() {
       <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-3xl -z-10" />
 
       {/* Top Bar Controls */}
-      <div className="absolute top-4 left-4 z-20">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={toggleLanguage} 
-          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80 h-10 px-4 shadow-sm border border-white/20 font-black text-xs flex gap-2 items-center"
-        >
-          <Languages className="w-4 h-4 text-primary" />
-          <span className="uppercase">{lang}</span>
-        </Button>
-      </div>
-
       <div className="absolute top-4 right-4 z-20">
         <Button 
           variant="ghost" 
@@ -173,6 +162,19 @@ export default function GameContainer() {
           className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80 h-10 w-10 shadow-sm border border-white/20"
         >
           {isMuted ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
+        </Button>
+      </div>
+
+      {/* Language Toggle - Moved to Bottom-Right */}
+      <div className="absolute bottom-4 right-4 z-30">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={toggleLanguage} 
+          className="rounded-full bg-white/70 backdrop-blur-md hover:bg-white/90 h-10 px-4 shadow-xl border border-white/30 font-black text-xs flex gap-2 items-center"
+        >
+          <Languages className="w-4 h-4 text-primary" />
+          <span className="uppercase">{lang}</span>
         </Button>
       </div>
 
@@ -254,7 +256,7 @@ export default function GameContainer() {
             <p className="text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, targetColor.name)}</p>
           </div>
 
-          <div className="w-full flex flex-wrap justify-center gap-3 pb-6">
+          <div className="w-full flex flex-wrap justify-center gap-3 pb-16">
             {choices.map((choice, i) => (
               <button
                 key={i}
@@ -281,7 +283,7 @@ export default function GameContainer() {
             <p className="text-xs text-muted-foreground font-black uppercase tracking-[0.2em]">{t(lang, 'finalScore')}</p>
           </div>
 
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-4 pb-16">
             {fact && (
               <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-secondary/20 relative group w-full shadow-sm">
                 <div className="absolute -top-3 left-6 bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest flex items-center gap-1 shadow-md">
