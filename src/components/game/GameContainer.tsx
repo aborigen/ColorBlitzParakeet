@@ -31,7 +31,7 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00A0' },
+  { name: 'Fuchsia', hex: '#FF00FF01' }, // Ensure unique hex if needed, though Fisher-Yates handles randomization
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
@@ -204,7 +204,7 @@ export default function GameContainer() {
       </div>
 
       {gameState === 'START' && (
-        <div className="flex flex-col items-center justify-center h-full w-full space-y-8 animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-6 sm:space-y-8 animate-in fade-in zoom-in duration-500">
           <div className="relative inline-block text-center">
              <div className="absolute -inset-2 bg-gradient-to-r from-primary to-secondary rounded-[2rem] blur-xl opacity-20"></div>
              <div className="relative bg-white/80 backdrop-blur-md p-6 sm:p-8 rounded-[2rem] shadow-2xl border border-white/50">
@@ -218,7 +218,7 @@ export default function GameContainer() {
              </div>
           </div>
           
-          <div className="w-full space-y-4 max-w-[280px] sm:max-w-none">
+          <div className="w-full space-y-4 max-w-[280px]">
             <Button 
               onClick={startGame} 
               size="lg" 
@@ -243,7 +243,7 @@ export default function GameContainer() {
       )}
 
       {gameState === 'PLAYING' && level && (
-        <div className={`w-full h-full flex flex-col justify-between py-2 space-y-2 sm:space-y-4 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
+        <div className={`w-full h-full flex flex-col justify-between py-2 space-y-2 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
           <div className="w-full flex justify-between items-center px-2 pt-1">
              <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 border-2 border-primary/10">
                 <Trophy className="w-4 h-4 text-secondary" />
@@ -259,16 +259,16 @@ export default function GameContainer() {
              </div>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center space-y-4 sm:space-y-6">
+          <div className="flex-1 flex flex-col items-center justify-center space-y-3 sm:space-y-6">
             <div className="text-center space-y-1">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t(lang, 'matchThis')}</h2>
-              <div className="h-1 w-6 bg-primary/20 mx-auto rounded-full" />
+              <h2 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t(lang, 'matchThis')}</h2>
+              <div className="h-0.5 w-6 bg-primary/20 mx-auto rounded-full" />
             </div>
             
             <div className="relative">
               <div className="absolute -inset-4 bg-white/40 blur-2xl rounded-full" />
               <div 
-                className={`w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-[2.5rem] sm:rounded-[3rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-4 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
+                className={`w-28 h-28 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-[2.2rem] sm:rounded-[3rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-4 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
                 style={{ backgroundColor: level.target.hex }}
               />
               {feedback === 'CORRECT' && (
@@ -278,16 +278,16 @@ export default function GameContainer() {
               )}
             </div>
             
-            <p className="text-sm sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
+            <p className="text-xs sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
           </div>
 
-          <div key={level.id} className="w-full flex flex-wrap justify-center gap-2 sm:gap-3 pb-16">
+          <div key={level.id} className="w-full flex flex-wrap justify-center gap-2 sm:gap-3 pb-8 sm:pb-16">
             {level.choices.map((choice, i) => (
               <button
                 key={`${choice.name}-${i}`}
                 onClick={() => handleChoice(choice)}
                 className={`
-                  ${level.choices.length > 4 ? 'w-[calc(33%-6px)]' : 'w-[calc(50%-5px)]'} 
+                  ${level.choices.length > 4 ? 'w-[calc(33.33%-8px)]' : 'w-[calc(50%-8px)]'} 
                   aspect-square rounded-xl sm:rounded-2xl shadow-[0_4px_0_rgba(0,0,0,0.1)] hover:shadow-[0_6px_0_rgba(0,0,0,0.1)] transition-all hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none relative overflow-hidden border-2 sm:border-4 border-white/80
                 `}
                 style={{ backgroundColor: choice.hex }}
@@ -300,39 +300,39 @@ export default function GameContainer() {
       )}
 
       {gameState === 'GAMEOVER' && (
-        <div className="flex flex-col items-center justify-center h-full w-full space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-y-auto no-scrollbar py-4">
-          <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-2xl border-t-8 border-primary w-full text-center relative overflow-hidden">
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 py-4 overflow-hidden">
+          <div className="bg-white p-4 sm:p-8 rounded-[2.5rem] shadow-2xl border-t-8 border-primary w-full text-center relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12" />
-            <h2 className="text-xl sm:text-2xl font-black text-foreground mb-2 sm:mb-4 uppercase tracking-tight">{t(lang, 'blitzOver')}</h2>
-            <div className="text-6xl sm:text-7xl font-black text-primary mb-1 sm:mb-2 tracking-tighter tabular-nums">{score}</div>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">{t(lang, 'finalScore')}</p>
+            <h2 className="text-lg sm:text-2xl font-black text-foreground mb-1 sm:mb-4 uppercase tracking-tight">{t(lang, 'blitzOver')}</h2>
+            <div className="text-5xl sm:text-7xl font-black text-primary mb-1 sm:mb-2 tracking-tighter tabular-nums">{score}</div>
+            <p className="text-[9px] sm:text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">{t(lang, 'finalScore')}</p>
           </div>
 
-          <div className="w-full space-y-4 pb-16">
+          <div className="w-full space-y-4 flex flex-col flex-1 min-h-0 justify-between">
             {fact && (
-              <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-3xl border-2 border-secondary/20 relative group w-full shadow-sm">
-                <div className="absolute -top-3 left-6 bg-secondary text-white px-3 py-1 rounded-full text-[9px] font-black tracking-widest flex items-center gap-1 shadow-md">
+              <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-3xl border-2 border-secondary/20 relative group w-full shadow-sm overflow-y-auto no-scrollbar flex-1 mb-2">
+                <div className="absolute top-2 left-6 bg-secondary text-white px-3 py-1 rounded-full text-[8px] sm:text-[9px] font-black tracking-widest flex items-center gap-1 shadow-md z-10">
                   <Info className="w-3 h-3" />
                   {t(lang, 'colorFact')}
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-foreground/80 leading-relaxed text-center pt-1">
+                <p className="text-xs sm:text-sm font-medium text-foreground/80 leading-relaxed text-center pt-6">
                   {fact}
                 </p>
               </div>
             )}
 
             {loadingFact && (
-              <div className="animate-pulse flex flex-col items-center space-y-2 w-full py-2">
-                <div className="h-2.5 bg-muted-foreground/20 rounded-full w-3/4" />
-                <div className="h-2.5 bg-muted-foreground/20 rounded-full w-1/2" />
+              <div className="animate-pulse flex flex-col items-center space-y-2 w-full py-2 flex-1">
+                <div className="h-2 bg-muted-foreground/20 rounded-full w-3/4" />
+                <div className="h-2 bg-muted-foreground/20 rounded-full w-1/2" />
               </div>
             )}
 
-            <div className="flex flex-col gap-2 sm:gap-3 w-full pt-2">
+            <div className="flex flex-col gap-2 sm:gap-3 w-full shrink-0 pb-8 sm:pb-0">
               <Button 
                 onClick={startGame} 
                 size="lg" 
-                className="h-14 sm:h-16 text-lg sm:text-xl font-black bg-primary hover:bg-primary/90 rounded-2xl shadow-[0_6px_0_rgb(220,38,38)] active:translate-y-1 active:shadow-none transition-all w-full"
+                className="h-12 sm:h-16 text-base sm:text-xl font-black bg-primary hover:bg-primary/90 rounded-2xl shadow-[0_6px_0_rgb(220,38,38)] active:translate-y-1 active:shadow-none transition-all w-full"
               >
                 <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                 {t(lang, 'retryBlitz')}
@@ -341,7 +341,7 @@ export default function GameContainer() {
                 variant="outline" 
                 onClick={() => setGameState('START')} 
                 size="lg" 
-                className="h-12 sm:h-14 text-xs font-black border-2 border-muted rounded-2xl text-muted-foreground hover:bg-muted transition-all w-full uppercase tracking-widest"
+                className="h-10 sm:h-14 text-[10px] sm:text-xs font-black border-2 border-muted rounded-2xl text-muted-foreground hover:bg-muted transition-all w-full uppercase tracking-widest"
               >
                 {t(lang, 'mainMenu')}
               </Button>
