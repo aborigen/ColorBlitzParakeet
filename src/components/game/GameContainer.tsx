@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trophy, RotateCcw, Info, Zap, Volume2, VolumeX, Languages } from 'lucide-react';
+import { Trophy, RotateCcw, Info, Zap, Volume2, VolumeX } from 'lucide-react';
 import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, YandexSDK, getLanguage } from '@/lib/yandex-sdk';
-import { aiCreatedColorFact } from '@/ai/flows/ai-created-color-fact-flow';
 import { t, tColor, Language } from '@/lib/i18n';
+import { getRandomFact } from '@/lib/facts';
 
 type GameState = 'START' | 'PLAYING' | 'GAMEOVER';
 
@@ -30,7 +30,7 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00F0' },
+  { name: 'Fuchsia', hex: '#FF00A0' }, // Unique hex for Fuchsia
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
@@ -104,18 +104,15 @@ export default function GameContainer() {
     setTimer(100);
   }, []);
 
-  const endGame = useCallback(async (finalScore: number, finalColorName: string) => {
+  const endGame = useCallback(async (finalScore: number) => {
     setGameState('GAMEOVER');
     
     setLoadingFact(true);
-    try {
-      const result = await aiCreatedColorFact({ colorName: finalColorName, lang });
-      setFact(result.fact);
-    } catch (e) {
-      setFact(t(lang, 'factFallback'));
-    } finally {
+    // Use local facts for static export compatibility
+    setTimeout(() => {
+      setFact(getRandomFact(lang));
       setLoadingFact(false);
-    }
+    }, 500);
 
     if (Math.random() > 0.6) {
       await showFullscreenAd(sdk);
@@ -130,7 +127,7 @@ export default function GameContainer() {
     if (gameState === 'PLAYING') {
       if (timer <= 0) {
         if (level) {
-          endGame(score, level.target.name);
+          endGame(score);
         }
       } else {
         const id = setInterval(() => {
@@ -265,7 +262,7 @@ export default function GameContainer() {
             <div className="relative">
               <div className="absolute -inset-4 bg-white/40 blur-2xl rounded-full" />
               <div 
-                className={`w-28 h-28 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-[2rem] sm:rounded-[3rem] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-6 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
+                className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-[2rem] sm:rounded-[3rem] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-6 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
                 style={{ backgroundColor: level.target.hex }}
               />
               {feedback === 'CORRECT' && (
@@ -278,7 +275,7 @@ export default function GameContainer() {
             <p className="text-sm sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
           </div>
 
-          <div key={level.id} className="w-full flex flex-wrap justify-center gap-3 sm:gap-4 pb-8 sm:pb-12">
+          <div key={level.id} className="w-full flex flex-wrap justify-center gap-3 sm:gap-4 pb-16 sm:pb-20">
             {level.choices.map((choice, i) => (
               <button
                 key={`${choice.name}-${i}`}
