@@ -30,7 +30,7 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00A0' },
+  { name: 'Fuchsia', hex: '#FF1493' }, // Fixed unique hex for Fuchsia
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
@@ -66,9 +66,13 @@ export default function GameContainer() {
 
   const playSFX = useCallback((url: string) => {
     if (isMuted) return;
-    const sfx = new Audio(url);
-    sfx.volume = 0.5;
-    sfx.play().catch(() => {});
+    try {
+      const sfx = new Audio(url);
+      sfx.volume = 0.6;
+      sfx.play().catch(() => {});
+    } catch (e) {
+      console.error("SFX error", e);
+    }
   }, [isMuted]);
 
   useEffect(() => {
@@ -102,13 +106,6 @@ export default function GameContainer() {
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
     
-    // Difficulty Tiers:
-    // Level 1: 0-4 points (3 choices)
-    // Level 2: 5-9 points (4 choices)
-    // Level 3: 10-14 points (6 choices)
-    // Level 4 (NEW): 15-19 points (8 choices)
-    // Level 5 (NEW): 20-29 points (9 choices)
-    // Level 6 (NEW): 30+ points (12 choices)
     let numChoices = 3;
     if (currentScore >= 30) numChoices = 12;
     else if (currentScore >= 20) numChoices = 9;
@@ -131,6 +128,7 @@ export default function GameContainer() {
 
   const endGame = useCallback(async (finalScore: number) => {
     setGameState('GAMEOVER');
+    // Trigger game over sound effect
     playSFX(SFX_GAMEOVER_URL);
     
     setLoadingFact(true);
@@ -156,9 +154,6 @@ export default function GameContainer() {
         }
       } else {
         const id = setInterval(() => {
-          // Timer speeds up as score increases
-          // Base speed: 2.5% per 100ms (4 seconds total)
-          // At score 30+: approx 5% per 100ms (2 seconds total)
           const speedMultiplier = 1 + Math.min(1, score / 30);
           setTimer((prev) => Math.max(0, prev - (2.5 * speedMultiplier)));
         }, 100);
@@ -194,7 +189,6 @@ export default function GameContainer() {
       setFeedback('WRONG');
       playSFX(SFX_WRONG_URL);
       setTimeout(() => setFeedback(null), 400);
-      // Penalty scales with difficulty
       const penalty = 15 + Math.min(15, Math.floor(score / 2));
       setTimer(t => Math.max(0, t - penalty));
     }
@@ -203,7 +197,6 @@ export default function GameContainer() {
   const toggleMute = () => setIsMuted(prev => !prev);
   const toggleLanguage = () => setLang(prev => prev === 'en' ? 'ru' : 'en');
 
-  // Helper to determine grid classes based on number of choices
   const getGridClasses = (count: number) => {
     if (count >= 12) return 'grid-cols-3 sm:grid-cols-4';
     if (count >= 8) return 'grid-cols-3';
@@ -216,7 +209,6 @@ export default function GameContainer() {
       <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-3xl -z-10" />
 
-      {/* Top Bar Controls */}
       <div className="absolute top-4 right-4 z-20">
         <Button 
           variant="ghost" 
@@ -228,7 +220,6 @@ export default function GameContainer() {
         </Button>
       </div>
 
-      {/* Language Toggle */}
       <div className="absolute bottom-4 right-4 z-30">
         <Button 
           variant="ghost" 
