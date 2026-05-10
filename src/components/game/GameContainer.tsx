@@ -30,7 +30,7 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00A0' },
+  { name: 'Fuchsia', hex: '#FF00E0' },
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
@@ -195,7 +195,7 @@ export default function GameContainer() {
           variant="ghost" 
           size="icon" 
           onClick={toggleMute} 
-          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80 h-9 w-9 shadow-sm border border-white/20"
+          className="rounded-full bg-white/50 backdrop-blur hover:bg-white/80 h-8 w-8 sm:h-9 sm:w-9 shadow-sm border border-white/20"
         >
           {isMuted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-primary" />}
         </Button>
@@ -207,45 +207,45 @@ export default function GameContainer() {
           variant="ghost" 
           size="sm" 
           onClick={toggleLanguage} 
-          className="rounded-full bg-white/70 backdrop-blur-md hover:bg-white/90 h-9 px-3 shadow-xl border border-white/30 font-black text-[10px] flex gap-2 items-center"
+          className="rounded-full bg-white/70 backdrop-blur-md hover:bg-white/90 h-8 sm:h-9 px-2 sm:px-3 shadow-xl border border-white/30 font-black text-[10px] flex gap-2 items-center"
         >
           <span className="uppercase">{lang}</span>
         </Button>
       </div>
 
       {gameState === 'START' && (
-        <div className="flex flex-col items-center justify-center flex-1 w-full space-y-6 sm:space-y-8 animate-in fade-in zoom-in duration-500">
-          <div className="relative inline-block text-center">
+        <div className="flex flex-col items-center justify-center flex-1 w-full space-y-6 sm:space-y-8 animate-in fade-in zoom-in duration-500 overflow-hidden">
+          <div className="relative inline-block text-center scale-90 sm:scale-100">
              <div className="absolute -inset-2 bg-gradient-to-r from-primary to-secondary rounded-[1.5rem] sm:rounded-[2rem] blur-xl opacity-20"></div>
-             <div className="relative bg-white/80 backdrop-blur-md p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-white/50">
-               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce">
-                 <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-primary fill-current" />
+             <div className="relative bg-white/80 backdrop-blur-md p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-white/50">
+               <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-bounce">
+                 <Zap className="w-6 h-6 sm:w-10 sm:h-10 text-primary fill-current" />
                </div>
-               <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-1 tracking-tight leading-none uppercase">
+               <h1 className="text-2xl sm:text-4xl font-black text-foreground mb-1 tracking-tight leading-none uppercase">
                  {t(lang, 'title')}<br /><span className="text-secondary">{t(lang, 'titleSuffix')}</span>
                </h1>
-               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mt-2">{t(lang, 'subtitle')}</p>
+               <p className="text-[8px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mt-1 sm:mt-2">{t(lang, 'subtitle')}</p>
              </div>
           </div>
           
-          <div className="w-full space-y-4 max-w-[280px]">
+          <div className="w-full space-y-3 sm:space-y-4 max-w-[280px]">
             <Button 
               onClick={startGame} 
               size="lg" 
-              className="w-full h-16 sm:h-20 text-xl sm:text-2xl font-black bg-primary hover:bg-primary/90 text-white rounded-[1.2rem] sm:rounded-[1.5rem] shadow-[0_6px_0_rgb(220,38,38)] sm:shadow-[0_8px_0_rgb(220,38,38)] hover:translate-y-[2px] hover:shadow-[0_4px_0_rgb(220,38,38)] active:translate-y-[6px] active:shadow-[0_2px_0_rgb(220,38,38)] transition-all flex flex-col gap-0 items-center justify-center"
+              className="w-full h-14 sm:h-20 text-lg sm:text-2xl font-black bg-primary hover:bg-primary/90 text-white rounded-[1.2rem] sm:rounded-[1.5rem] shadow-[0_4px_0_rgb(220,38,38)] sm:shadow-[0_8px_0_rgb(220,38,38)] hover:translate-y-[1px] active:translate-y-[4px] transition-all flex flex-col gap-0 items-center justify-center"
             >
               <span>{t(lang, 'playNow')}</span>
-              <span className="text-[9px] font-bold opacity-70 tracking-widest">{t(lang, 'startBlitzing')}</span>
+              <span className="text-[8px] sm:text-[9px] font-bold opacity-70 tracking-widest">{t(lang, 'startBlitzing')}</span>
             </Button>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-white/50 backdrop-blur-sm p-3 rounded-xl sm:rounded-2xl border border-white/50 flex flex-col items-center justify-center text-center">
-                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mb-1 text-secondary" />
-                <span className="text-[9px] uppercase font-black text-muted-foreground">{t(lang, 'leaderboards')}</span>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="bg-white/50 backdrop-blur-sm p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-white/50 flex flex-col items-center justify-center text-center">
+                <Trophy className="w-4 h-4 mb-1 text-secondary" />
+                <span className="text-[8px] uppercase font-black text-muted-foreground">{t(lang, 'leaderboards')}</span>
               </div>
-              <div className="bg-white/50 backdrop-blur-sm p-3 rounded-xl sm:rounded-2xl border border-white/50 flex flex-col items-center justify-center text-center">
-                <Zap className="w-4 h-4 sm:w-5 sm:h-5 mb-1 text-primary" />
-                <span className="text-[9px] uppercase font-black text-muted-foreground">{t(lang, 'quickReflex')}</span>
+              <div className="bg-white/50 backdrop-blur-sm p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-white/50 flex flex-col items-center justify-center text-center">
+                <Zap className="w-4 h-4 mb-1 text-primary" />
+                <span className="text-[8px] uppercase font-black text-muted-foreground">{t(lang, 'quickReflex')}</span>
               </div>
             </div>
           </div>
@@ -253,14 +253,14 @@ export default function GameContainer() {
       )}
 
       {gameState === 'PLAYING' && level && (
-        <div className={`w-full h-full flex flex-col justify-between py-4 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
-          <div className="w-full flex justify-between items-center">
-             <div className="bg-white/80 backdrop-blur px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 border-2 border-primary/10">
-                <Trophy className="w-4 h-4 text-secondary" />
-                <span className="text-lg font-black text-foreground tabular-nums">{score}</span>
+        <div className={`w-full h-full flex flex-col justify-between py-2 sm:py-4 ${feedback === 'WRONG' ? 'game-shake' : ''}`}>
+          <div className="w-full flex justify-between items-center px-1">
+             <div className="bg-white/80 backdrop-blur px-2.5 py-1 rounded-full shadow-lg flex items-center gap-2 border border-primary/10">
+                <Trophy className="w-3.5 h-3.5 text-secondary" />
+                <span className="text-base font-black text-foreground tabular-nums">{score}</span>
              </div>
-             <div className="flex-1 max-w-[150px] ml-4">
-                <div className="relative h-3 w-full bg-white/50 rounded-full border-2 border-white overflow-hidden shadow-inner">
+             <div className="flex-1 max-w-[120px] sm:max-w-[150px] ml-4">
+                <div className="relative h-2.5 sm:h-3 w-full bg-white/50 rounded-full border border-white overflow-hidden shadow-inner">
                   <div 
                     className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-100 ease-linear"
                     style={{ width: `${timer}%` }}
@@ -269,35 +269,35 @@ export default function GameContainer() {
              </div>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center space-y-4 sm:space-y-6">
+          <div className="flex-1 flex flex-col items-center justify-center space-y-3 sm:space-y-6 min-h-0">
             <div className="text-center">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t(lang, 'matchThis')}</h2>
+              <h2 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t(lang, 'matchThis')}</h2>
             </div>
             
             <div className="relative">
               <div className="absolute -inset-4 bg-white/40 blur-2xl rounded-full" />
               <div 
-                className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-[2rem] sm:rounded-[3rem] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-6 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
+                className={`w-20 h-20 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-[1.5rem] sm:rounded-[3rem] shadow-[0_8px_20px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-4 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
                 style={{ backgroundColor: level.target.hex }}
               />
               {feedback === 'CORRECT' && (
-                <div className="absolute -top-2 -right-2 bg-green-500 text-white p-1.5 rounded-full shadow-lg z-20 animate-bounce">
-                  <Zap className="w-5 h-5 fill-current" />
+                <div className="absolute -top-1 -right-1 bg-green-500 text-white p-1 rounded-full shadow-lg z-20 animate-bounce">
+                  <Zap className="w-4 h-4 fill-current" />
                 </div>
               )}
             </div>
             
-            <p className="text-sm sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
+            <p className="text-xs sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
           </div>
 
-          <div key={level.id} className="w-full flex flex-wrap justify-center gap-3 sm:gap-4 pb-16 sm:pb-20">
+          <div key={level.id} className="w-full flex flex-wrap justify-center gap-2 sm:gap-4 pb-12 sm:pb-20 px-1">
             {level.choices.map((choice, i) => (
               <button
                 key={`${choice.name}-${i}`}
                 onClick={() => handleChoice(choice)}
                 className={`
-                  ${level.choices.length > 4 ? 'w-[calc(33.33%-11px)]' : 'w-[calc(50%-11px)]'} 
-                  aspect-square rounded-xl sm:rounded-2xl shadow-[0_4px_0_rgba(0,0,0,0.1)] hover:shadow-[0_6px_0_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 active:translate-y-1 active:shadow-none relative overflow-hidden border-3 sm:border-4 border-white/80
+                  ${level.choices.length > 4 ? 'w-[calc(33.33%-7px)]' : 'w-[calc(50%-7px)]'} 
+                  aspect-square rounded-xl sm:rounded-2xl shadow-[0_3px_0_rgba(0,0,0,0.1)] transition-all active:translate-y-1 active:shadow-none relative overflow-hidden border-2 sm:border-4 border-white/80
                 `}
                 style={{ backgroundColor: choice.hex }}
               >
@@ -309,48 +309,48 @@ export default function GameContainer() {
       )}
 
       {gameState === 'GAMEOVER' && (
-        <div className="flex flex-col items-center justify-center h-full w-full space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 py-4 overflow-hidden">
-          <div className="bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border-t-6 sm:border-t-8 border-primary w-full text-center relative overflow-hidden shrink-0">
-            <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-primary/5 rounded-full -mr-10 -mt-10 sm:-mr-12 sm:-mt-12" />
-            <h2 className="text-xl sm:text-2xl font-black text-foreground mb-2 sm:mb-4 uppercase tracking-tight">{t(lang, 'blitzOver')}</h2>
-            <div className="text-6xl sm:text-7xl font-black text-primary mb-1 sm:mb-2 tracking-tighter tabular-nums">{score}</div>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">{t(lang, 'finalScore')}</p>
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-3 sm:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 py-2 sm:py-4 overflow-hidden">
+          <div className="bg-white p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl border-t-4 sm:border-t-8 border-primary w-full text-center relative overflow-hidden shrink-0">
+            <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-primary/5 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12" />
+            <h2 className="text-lg sm:text-2xl font-black text-foreground mb-1 sm:mb-4 uppercase tracking-tight">{t(lang, 'blitzOver')}</h2>
+            <div className="text-5xl sm:text-7xl font-black text-primary mb-1 tracking-tighter tabular-nums">{score}</div>
+            <p className="text-[9px] sm:text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">{t(lang, 'finalScore')}</p>
           </div>
 
-          <div className="w-full space-y-4 flex flex-col flex-1 min-h-0 justify-between overflow-hidden">
+          <div className="w-full space-y-3 sm:space-y-4 flex flex-col flex-1 min-h-0 justify-between overflow-hidden">
             {fact && (
-              <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 border-secondary/20 relative w-full shadow-sm overflow-y-auto no-scrollbar flex-1">
-                <div className="absolute top-2 left-4 bg-secondary text-white px-3 py-1 rounded-full text-[9px] font-black tracking-widest flex items-center gap-1.5 shadow-md z-10">
-                  <Info className="w-3 h-3" />
+              <div className="bg-white/80 backdrop-blur-sm p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-2 border-secondary/20 relative w-full shadow-sm overflow-y-auto no-scrollbar flex-1 max-h-[30dvh]">
+                <div className="absolute top-1.5 left-3 bg-secondary text-white px-2 py-0.5 rounded-full text-[8px] font-black tracking-widest flex items-center gap-1 shadow-md z-10">
+                  <Info className="w-2.5 h-2.5" />
                   {t(lang, 'colorFact')}
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-foreground/80 leading-relaxed text-center pt-6 sm:pt-8">
+                <p className="text-[11px] sm:text-sm font-medium text-foreground/80 leading-relaxed text-center pt-5 sm:pt-8">
                   {fact}
                 </p>
               </div>
             )}
 
             {loadingFact && (
-              <div className="animate-pulse flex flex-col items-center space-y-2 w-full py-4 flex-1">
-                <div className="h-2 bg-muted-foreground/20 rounded-full w-3/4" />
-                <div className="h-2 bg-muted-foreground/20 rounded-full w-1/2" />
+              <div className="animate-pulse flex flex-col items-center space-y-2 w-full py-2 flex-1">
+                <div className="h-1.5 bg-muted-foreground/20 rounded-full w-3/4" />
+                <div className="h-1.5 bg-muted-foreground/20 rounded-full w-1/2" />
               </div>
             )}
 
-            <div className="flex flex-col gap-3 w-full shrink-0">
+            <div className="flex flex-col gap-2 sm:gap-3 w-full shrink-0 pb-10 sm:pb-0">
               <Button 
                 onClick={startGame} 
                 size="lg" 
-                className="h-14 sm:h-16 text-lg sm:text-xl font-black bg-primary hover:bg-primary/90 rounded-[1.2rem] sm:rounded-2xl shadow-[0_4px_0_rgb(220,38,38)] sm:shadow-[0_6px_0_rgb(220,38,38)] active:translate-y-1 active:shadow-none transition-all w-full"
+                className="h-12 sm:h-16 text-base sm:text-xl font-black bg-primary hover:bg-primary/90 rounded-[1rem] sm:rounded-2xl shadow-[0_3px_0_rgb(220,38,38)] sm:shadow-[0_6px_0_rgb(220,38,38)] active:translate-y-1 active:shadow-none transition-all w-full"
               >
-                <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                <RotateCcw className="w-4 h-4 sm:w-6 sm:h-6 mr-2" />
                 {t(lang, 'retryBlitz')}
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setGameState('START')} 
                 size="lg" 
-                className="h-12 sm:h-14 text-[10px] sm:text-xs font-black border-2 border-muted rounded-[1.2rem] sm:rounded-2xl text-muted-foreground hover:bg-muted transition-all w-full uppercase tracking-widest"
+                className="h-10 sm:h-14 text-[9px] sm:text-xs font-black border-2 border-muted rounded-[1rem] sm:rounded-2xl text-muted-foreground hover:bg-muted transition-all w-full uppercase tracking-widest"
               >
                 {t(lang, 'mainMenu')}
               </Button>
