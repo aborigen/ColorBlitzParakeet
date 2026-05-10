@@ -30,12 +30,16 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00A0' }, // Unique hex for Fuchsia
+  { name: 'Fuchsia', hex: '#FF00A0' },
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
 
 const BG_MUSIC_URL = 'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3';
+const SFX_CORRECT_URL = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3';
+const SFX_WRONG_URL = 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3';
+const SFX_START_URL = 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3';
+const SFX_GAMEOVER_URL = 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3';
 
 const shuffle = <T,>(array: T[]): T[] => {
   const newArray = [...array];
@@ -60,6 +64,13 @@ export default function GameContainer() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const playSFX = useCallback((url: string) => {
+    if (isMuted) return;
+    const sfx = new Audio(url);
+    sfx.volume = 0.5;
+    sfx.play().catch(() => {});
+  }, [isMuted]);
+
   useEffect(() => {
     initYandexSDK().then(sdkInstance => {
       setSdk(sdkInstance);
@@ -70,6 +81,7 @@ export default function GameContainer() {
     
     const audio = new Audio(BG_MUSIC_URL);
     audio.loop = true;
+    audio.volume = 0.3;
     audioRef.current = audio;
 
     return () => {
@@ -106,9 +118,9 @@ export default function GameContainer() {
 
   const endGame = useCallback(async (finalScore: number) => {
     setGameState('GAMEOVER');
+    playSFX(SFX_GAMEOVER_URL);
     
     setLoadingFact(true);
-    // Use local facts for static export compatibility
     setTimeout(() => {
       setFact(getRandomFact(lang));
       setLoadingFact(false);
@@ -121,7 +133,7 @@ export default function GameContainer() {
     if (finalScore > 0) {
       submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
-  }, [sdk, lang]);
+  }, [sdk, lang, playSFX]);
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
@@ -144,11 +156,12 @@ export default function GameContainer() {
     setFeedback(null);
     generateLevel(0);
     setGameState('PLAYING');
+    playSFX(SFX_START_URL);
 
     if (audioRef.current) {
       audioRef.current.play().catch(e => console.log("Audio blocked"));
     }
-  }, [generateLevel]);
+  }, [generateLevel, playSFX]);
 
   const handleChoice = useCallback((color: ColorOption) => {
     if (!level) return;
@@ -157,14 +170,16 @@ export default function GameContainer() {
       const nextScore = score + 1;
       setScore(nextScore);
       setFeedback('CORRECT');
+      playSFX(SFX_CORRECT_URL);
       setTimeout(() => setFeedback(null), 200);
       generateLevel(nextScore);
     } else {
       setFeedback('WRONG');
+      playSFX(SFX_WRONG_URL);
       setTimeout(() => setFeedback(null), 400);
       setTimer(t => Math.max(0, t - 15));
     }
-  }, [level, generateLevel, score]);
+  }, [level, generateLevel, score, playSFX]);
 
   const toggleMute = () => setIsMuted(prev => !prev);
   const toggleLanguage = () => setLang(prev => prev === 'en' ? 'ru' : 'en');
