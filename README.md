@@ -10,6 +10,7 @@ Color Dash Blitz is a fast-paced, hyper-casual color matching game built for the
 - **Immersive Audio**: Catchy background music with a convenient mute toggle.
 - **Yandex Games Integration**: Ready for distribution with built-in support for full-screen ads and global leaderboards.
 - **Responsive Design**: Optimized for both mobile and desktop, ensuring a seamless experience without scrolling.
+- **Multilingual Support**: Available in both English and Russian.
 
 ## 🛠 Tech Stack
 
@@ -35,6 +36,19 @@ npm run dev
 ```
 
 Open [http://localhost:9002](http://localhost:9002) with your browser to see the result.
+
+## 📦 Pushing to Git
+
+Since this project was generated as a prototype, you can push it to your own repository by running:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit of Color Dash Blitz"
+git branch -M main
+git remote add origin <YOUR_REPOSITORY_URL>
+git push -u origin main
+```
 
 ## 🤖 Genkit Development
 
