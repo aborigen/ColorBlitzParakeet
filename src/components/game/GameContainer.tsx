@@ -30,7 +30,7 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF00E0' },
+  { name: 'Fuchsia', hex: '#FF00A0' },
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
@@ -102,7 +102,20 @@ export default function GameContainer() {
     const correctIdx = Math.floor(Math.random() * COLORS_POOL.length);
     const correctColor = COLORS_POOL[correctIdx];
     
-    const numChoices = Math.min(6, 3 + Math.floor(currentScore / 5));
+    // Difficulty Tiers:
+    // Level 1: 0-4 points (3 choices)
+    // Level 2: 5-9 points (4 choices)
+    // Level 3: 10-14 points (6 choices)
+    // Level 4 (NEW): 15-19 points (8 choices)
+    // Level 5 (NEW): 20-29 points (9 choices)
+    // Level 6 (NEW): 30+ points (12 choices)
+    let numChoices = 3;
+    if (currentScore >= 30) numChoices = 12;
+    else if (currentScore >= 20) numChoices = 9;
+    else if (currentScore >= 15) numChoices = 8;
+    else if (currentScore >= 10) numChoices = 6;
+    else if (currentScore >= 5) numChoices = 4;
+    
     const wrongChoicesPool = COLORS_POOL.filter(c => c.hex !== correctColor.hex);
     const shuffledWrongPool = shuffle(wrongChoicesPool);
     const selectedWrongOnes = shuffledWrongPool.slice(0, numChoices - 1);
@@ -143,7 +156,11 @@ export default function GameContainer() {
         }
       } else {
         const id = setInterval(() => {
-          setTimer((prev) => Math.max(0, prev - 2.5));
+          // Timer speeds up as score increases
+          // Base speed: 2.5% per 100ms (4 seconds total)
+          // At score 30+: approx 5% per 100ms (2 seconds total)
+          const speedMultiplier = 1 + Math.min(1, score / 30);
+          setTimer((prev) => Math.max(0, prev - (2.5 * speedMultiplier)));
         }, 100);
         return () => clearInterval(id);
       }
@@ -177,12 +194,22 @@ export default function GameContainer() {
       setFeedback('WRONG');
       playSFX(SFX_WRONG_URL);
       setTimeout(() => setFeedback(null), 400);
-      setTimer(t => Math.max(0, t - 15));
+      // Penalty scales with difficulty
+      const penalty = 15 + Math.min(15, Math.floor(score / 2));
+      setTimer(t => Math.max(0, t - penalty));
     }
   }, [level, generateLevel, score, playSFX]);
 
   const toggleMute = () => setIsMuted(prev => !prev);
   const toggleLanguage = () => setLang(prev => prev === 'en' ? 'ru' : 'en');
+
+  // Helper to determine grid classes based on number of choices
+  const getGridClasses = (count: number) => {
+    if (count >= 12) return 'grid-cols-3 sm:grid-cols-4';
+    if (count >= 8) return 'grid-cols-3';
+    if (count >= 5) return 'grid-cols-2 sm:grid-cols-3';
+    return 'grid-cols-2';
+  };
 
   return (
     <div className="flex flex-col items-center justify-between h-[100dvh] w-full p-4 max-w-md mx-auto relative overflow-hidden bg-background">
@@ -269,7 +296,7 @@ export default function GameContainer() {
              </div>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center space-y-3 sm:space-y-6 min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-center space-y-2 sm:space-y-4 min-h-0">
             <div className="text-center">
               <h2 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t(lang, 'matchThis')}</h2>
             </div>
@@ -277,7 +304,7 @@ export default function GameContainer() {
             <div className="relative">
               <div className="absolute -inset-4 bg-white/40 blur-2xl rounded-full" />
               <div 
-                className={`w-20 h-20 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-[1.5rem] sm:rounded-[3rem] shadow-[0_8px_20px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-4 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
+                className={`w-16 h-16 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-[1.2rem] sm:rounded-[2.5rem] shadow-[0_8px_20px_-10px_rgba(0,0,0,0.3)] transition-all duration-200 border-4 sm:border-8 border-white relative z-10 ${feedback === 'CORRECT' ? 'scale-110 game-bounce' : ''}`}
                 style={{ backgroundColor: level.target.hex }}
               />
               {feedback === 'CORRECT' && (
@@ -287,18 +314,15 @@ export default function GameContainer() {
               )}
             </div>
             
-            <p className="text-xs sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
+            <p className="text-[10px] sm:text-base font-black text-foreground/80 uppercase tracking-[0.2em]">{tColor(lang, level.target.name)}</p>
           </div>
 
-          <div key={level.id} className="w-full flex flex-wrap justify-center gap-2 sm:gap-4 pb-12 sm:pb-20 px-1">
+          <div key={level.id} className={`w-full grid ${getGridClasses(level.choices.length)} gap-2 sm:gap-4 pb-12 sm:pb-20 px-1`}>
             {level.choices.map((choice, i) => (
               <button
                 key={`${choice.name}-${i}`}
                 onClick={() => handleChoice(choice)}
-                className={`
-                  ${level.choices.length > 4 ? 'w-[calc(33.33%-7px)]' : 'w-[calc(50%-7px)]'} 
-                  aspect-square rounded-xl sm:rounded-2xl shadow-[0_3px_0_rgba(0,0,0,0.1)] transition-all active:translate-y-1 active:shadow-none relative overflow-hidden border-2 sm:border-4 border-white/80
-                `}
+                className="aspect-square rounded-xl sm:rounded-2xl shadow-[0_3px_0_rgba(0,0,0,0.1)] transition-all active:translate-y-1 active:shadow-none relative overflow-hidden border-2 sm:border-4 border-white/80"
                 style={{ backgroundColor: choice.hex }}
               >
                 <div className="absolute inset-0 bg-white opacity-0 active:opacity-20 transition-opacity" />
