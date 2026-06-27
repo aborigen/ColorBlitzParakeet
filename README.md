@@ -5,58 +5,75 @@ Color Dash Blitz is a fast-paced, hyper-casual color matching game built for the
 ## 🚀 Features
 
 - **Fast-Paced Gameplay**: High-intensity matching that tests your speed and precision.
-- **Dynamic Difficulty**: The game scales from 3 to 6 color choices as your score increases.
-- **AI Color Facts**: Powered by Genkit and Google Gemini, receive a unique color theory fact after every game session.
-- **Immersive Audio**: Catchy background music with a convenient mute toggle.
-- **Yandex Games Integration**: Ready for distribution with built-in support for full-screen ads and global leaderboards.
-- **Responsive Design**: Optimized for both mobile and desktop, ensuring a seamless experience without scrolling.
-- **Multilingual Support**: Available in both English and Russian.
+- **Dynamic Difficulty**: The game scales from 3 to 12 color choices with an accelerating timer.
+- **AI Color Facts**: Receive unique color theory facts after every game session.
+- **Immersive Audio**: High-energy sound effects for every game action with a mute toggle.
+- **Yandex Games Integration**: Built-in support for Remote Config, full-screen ads, and global leaderboards.
+- **Responsive Design**: Optimized with `dvh` units for a perfect "no-scroll" experience on smartphone portrait screens.
+- **Static Export**: Fully compatible with static hosting (Yandex Games, GitHub Pages).
 
 ## 🛠 Tech Stack
 
 - **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
-- **AI Implementation**: [Genkit](https://firebase.google.com/docs/genkit) with Google Gemini
+- **AI Implementation**: [Genkit](https://firebase.google.com/docs/genkit) (for fact generation during development)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Platform SDK**: Yandex Games SDK
+- **Platform**: Yandex Games SDK
 
 ## 🏁 Getting Started
 
-First, install the dependencies:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm install
-```
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-Then, run the development server:
+3. Build the static version:
+   ```bash
+   npm run build
+   ```
+   The static files will be generated in the `out/` directory.
 
-```bash
-npm run dev
-```
+## 📦 How to Push to GitHub
 
-Open [http://localhost:9002](http://localhost:9002) with your browser to see the result.
+If your `git push` failed, follow these exact steps to ensure a clean setup:
 
-## 📦 Pushing to Git
+1. **Initialize the Repository**:
+   ```bash
+   git init
+   ```
 
-Since this project was generated as a prototype, you can push it to your own repository by running:
+2. **Add Your Files**:
+   ```bash
+   git add .
+   ```
 
-```bash
-git init
-git add .
-git commit -m "Initial commit of Color Dash Blitz"
-git branch -M main
-git remote add origin <YOUR_REPOSITORY_URL>
-git push -u origin main
-```
+3. **Commit the Code**:
+   ```bash
+   git commit -m "Initial release of Color Dash Blitz"
+   ```
 
-## 🤖 Genkit Development
+4. **Create a Remote**:
+   Go to GitHub, create a **new empty repository**, and copy the URL. Then run:
+   ```bash
+   git remote add origin <YOUR_REPOSITORY_URL>
+   ```
 
-To explore and test the AI flows used for color facts, you can start the Genkit UI:
+5. **Push to Main**:
+   ```bash
+   git branch -M main
+   git push -u origin main
+   ```
 
-```bash
-npm run genkit:dev
-```
+### Common Push Errors:
+- **"Remote origin already exists"**: Run `git remote remove origin` and try step 4 again.
+- **"Permission denied"**: Ensure you have SSH keys set up or use a Personal Access Token for HTTPS.
+- **"Updates were rejected"**: This usually means the remote repository isn't empty. Try `git push -f origin main` only if you are sure you want to overwrite the remote.
 
 ## 📄 License
 
