@@ -30,7 +30,7 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Orange', hex: '#FFA500' },
   { name: 'Purple', hex: '#800080' },
   { name: 'Coral', hex: '#FF7F50' },
-  { name: 'Fuchsia', hex: '#FF1493' }, // Fixed unique hex for Fuchsia
+  { name: 'Fuchsia', hex: '#FF1493' },
   { name: 'Teal', hex: '#008080' },
   { name: 'Gold', hex: '#FFD700' },
 ];
@@ -77,8 +77,8 @@ export default function GameContainer() {
 
   useEffect(() => {
     initYandexSDK().then(sdkInstance => {
-      setSdk(sdkInstance);
       if (sdkInstance) {
+        setSdk(sdkInstance);
         setLang(getLanguage(sdkInstance));
       }
     });
@@ -128,7 +128,6 @@ export default function GameContainer() {
 
   const endGame = useCallback(async (finalScore: number) => {
     setGameState('GAMEOVER');
-    // Trigger game over sound effect
     playSFX(SFX_GAMEOVER_URL);
     
     setLoadingFact(true);
@@ -137,11 +136,13 @@ export default function GameContainer() {
       setLoadingFact(false);
     }, 500);
 
+    // Only show ads occasionally (e.g., 40% chance)
     if (Math.random() > 0.6) {
       await showFullscreenAd(sdk);
     }
     
     if (finalScore > 0) {
+      // Yandex leaderboard name should match what's in the console (default is 'high_scores')
       submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
   }, [sdk, lang, playSFX]);
@@ -171,7 +172,7 @@ export default function GameContainer() {
     playSFX(SFX_START_URL);
 
     if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log("Audio blocked"));
+      audioRef.current.play().catch(e => console.log("Audio playback blocked by browser policy"));
     }
   }, [generateLevel, playSFX]);
 
