@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trophy, RotateCcw, Info, Zap, Volume2, VolumeX } from 'lucide-react';
-import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, YandexSDK, getLanguage } from '@/lib/yandex-sdk';
+import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, fetchRemoteConfig, YandexSDK, getLanguage } from '@/lib/yandex-sdk';
 import { t, tColor, Language } from '@/lib/i18n';
 import { getRandomFact } from '@/lib/facts';
 
@@ -59,10 +59,15 @@ export default function GameContainer() {
   const [loadingFact, setLoadingFact] = useState(false);
   const [feedback, setFeedback] = useState<'CORRECT' | 'WRONG' | null>(null);
   const [sdk, setSdk] = useState<YandexSDK | null>(null);
+  const [remoteConfig, setRemoteConfig] = useState<Record<string, any>>({});
   const [isMuted, setIsMuted] = useState(false);
   const [lang, setLang] = useState<Language>('en');
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Feature Toggles from Remote Config (with defaults)
+  const enableFacts = remoteConfig.enable_facts !== false; // Default true
+  const initialTimerValue = Number(remoteConfig.starting_timer) || 100;
 
   const playSFX = useCallback((url: string) => {
     if (isMuted) return;
@@ -76,10 +81,12 @@ export default function GameContainer() {
   }, [isMuted]);
 
   useEffect(() => {
-    initYandexSDK().then(sdkInstance => {
+    initYandexSDK().then(async (sdkInstance) => {
       if (sdkInstance) {
         setSdk(sdkInstance);
         setLang(getLanguage(sdkInstance));
+        const config = await fetchRemoteConfig(sdkInstance);
+        setRemoteConfig(config);
       }
     });
     
@@ -123,18 +130,20 @@ export default function GameContainer() {
       choices: finalChoices,
       id: Date.now()
     });
-    setTimer(100);
-  }, []);
+    setTimer(initialTimerValue);
+  }, [initialTimerValue]);
 
   const endGame = useCallback(async (finalScore: number) => {
     setGameState('GAMEOVER');
     playSFX(SFX_GAMEOVER_URL);
     
-    setLoadingFact(true);
-    setTimeout(() => {
-      setFact(getRandomFact(lang));
-      setLoadingFact(false);
-    }, 500);
+    if (enableFacts) {
+      setLoadingFact(true);
+      setTimeout(() => {
+        setFact(getRandomFact(lang));
+        setLoadingFact(false);
+      }, 500);
+    }
 
     // Only show ads occasionally (e.g., 40% chance)
     if (Math.random() > 0.6) {
@@ -142,10 +151,9 @@ export default function GameContainer() {
     }
     
     if (finalScore > 0) {
-      // Yandex leaderboard name should match what's in the console (default is 'high_scores')
       submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
-  }, [sdk, lang, playSFX]);
+  }, [sdk, lang, playSFX, enableFacts]);
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
@@ -172,7 +180,7 @@ export default function GameContainer() {
     playSFX(SFX_START_URL);
 
     if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log("Audio playback blocked by browser policy"));
+      audioRef.current.play().catch(e => console.log("Audio playback blocked"));
     }
   }, [generateLevel, playSFX]);
 
@@ -334,7 +342,7 @@ export default function GameContainer() {
           </div>
 
           <div className="w-full space-y-3 sm:space-y-4 flex flex-col flex-1 min-h-0 justify-between overflow-hidden">
-            {fact && (
+            {enableFacts && fact && (
               <div className="bg-white/80 backdrop-blur-sm p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-2 border-secondary/20 relative w-full shadow-sm overflow-y-auto no-scrollbar flex-1 max-h-[30dvh]">
                 <div className="absolute top-1.5 left-3 bg-secondary text-white px-2 py-0.5 rounded-full text-[8px] font-black tracking-widest flex items-center gap-1 shadow-md z-10">
                   <Info className="w-2.5 h-2.5" />
@@ -346,7 +354,7 @@ export default function GameContainer() {
               </div>
             )}
 
-            {loadingFact && (
+            {enableFacts && loadingFact && (
               <div className="animate-pulse flex flex-col items-center space-y-2 w-full py-2 flex-1">
                 <div className="h-1.5 bg-muted-foreground/20 rounded-full w-3/4" />
                 <div className="h-1.5 bg-muted-foreground/20 rounded-full w-1/2" />

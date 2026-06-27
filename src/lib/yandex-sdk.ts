@@ -20,6 +20,7 @@ export interface YandexSDK {
     setLeaderboardScore: (name: string, score: number) => Promise<void>;
     getLeaderboardDescription: (name: string) => Promise<any>;
   }>;
+  getRemoteConfig: (options?: { clientParams?: Record<string, string> }) => Promise<Record<string, any>>;
   environment: {
     i18n: {
       lang: string;
@@ -90,8 +91,22 @@ export async function submitScoreToLeaderboard(sdk: YandexSDK | null, leaderboar
     await lb.setLeaderboardScore(leaderboardName, score);
     console.log(`Score ${score} submitted to ${leaderboardName}`);
   } catch (err) {
-    // Fail silently in production if leaderboards are not configured or user is not auth'd
-    console.warn('Leaderboard submission failed (ensure leaderboards are enabled in Yandex Console):', err);
+    console.warn('Leaderboard submission failed:', err);
+  }
+}
+
+/**
+ * Fetches remote configuration from Yandex Games Console.
+ */
+export async function fetchRemoteConfig(sdk: YandexSDK | null): Promise<Record<string, any>> {
+  if (!sdk) return {};
+  try {
+    const config = await sdk.getRemoteConfig();
+    console.log('Remote Config loaded:', config);
+    return config;
+  } catch (err) {
+    console.warn('Failed to fetch remote config:', err);
+    return {};
   }
 }
 
