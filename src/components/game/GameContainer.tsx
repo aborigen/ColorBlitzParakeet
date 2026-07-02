@@ -127,7 +127,8 @@ export default function GameContainer() {
     }
     
     if (finalScore > 0) {
-      submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
+      // Updated to use the 'leaders' leaderboard name as requested
+      submitScoreToLeaderboard(sdk, 'leaders', finalScore);
     }
   }, [sdk, lang, playSound, enableFacts]);
 

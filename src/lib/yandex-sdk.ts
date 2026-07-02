@@ -93,10 +93,11 @@ export async function submitScoreToLeaderboard(sdk: YandexSDK | null, leaderboar
   if (!sdk) return;
   try {
     const lb = await sdk.getLeaderboards();
+    // Yandex SDK handles its own auth check inside setLeaderboardScore
     await lb.setLeaderboardScore(leaderboardName, score);
-    console.log(`Score ${score} submitted to ${leaderboardName}`);
+    console.log(`Score ${score} submitted to leaderboard: ${leaderboardName}`);
   } catch (err) {
-    console.warn('Leaderboard submission failed:', err);
+    console.warn(`Leaderboard submission failed for '${leaderboardName}':`, err);
   }
 }
 
