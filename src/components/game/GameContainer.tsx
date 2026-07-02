@@ -86,6 +86,11 @@ export default function GameContainer() {
         setLang(getLanguage(sdkInstance));
         const config = await fetchRemoteConfig(sdkInstance);
         setRemoteConfig(config);
+        
+        // Signal Yandex Games that the game is ready to be shown
+        if (sdkInstance.features?.LoadingProgress?.ready) {
+          sdkInstance.features.LoadingProgress.ready();
+        }
       }
     });
     

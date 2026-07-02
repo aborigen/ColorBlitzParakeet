@@ -16,6 +16,11 @@ export interface YandexSDK {
       onError?: (error: any) => void; 
     }) => void;
   };
+  features: {
+    LoadingProgress: {
+      ready: () => void;
+    };
+  };
   getLeaderboards: () => Promise<{
     setLeaderboardScore: (name: string, score: number) => Promise<void>;
     getLeaderboardDescription: (name: string) => Promise<any>;
