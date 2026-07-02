@@ -6,6 +6,7 @@ import { Trophy, RotateCcw, Info, Zap, Volume2, VolumeX } from 'lucide-react';
 import { initYandexSDK, showFullscreenAd, submitScoreToLeaderboard, fetchRemoteConfig, YandexSDK, getLanguage } from '@/lib/yandex-sdk';
 import { t, tColor, Language } from '@/lib/i18n';
 import { getRandomFact } from '@/lib/facts';
+import { synth } from '@/lib/audio-synth';
 
 type GameState = 'START' | 'PLAYING' | 'GAMEOVER';
 
@@ -35,12 +36,6 @@ const COLORS_POOL: ColorOption[] = [
   { name: 'Gold', hex: '#FFD700' },
 ];
 
-const BG_MUSIC_URL = 'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3';
-const SFX_CORRECT_URL = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3';
-const SFX_WRONG_URL = 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3';
-const SFX_START_URL = 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3';
-const SFX_GAMEOVER_URL = 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3';
-
 const shuffle = <T,>(array: T[]): T[] => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -62,22 +57,9 @@ export default function GameContainer() {
   const [remoteConfig, setRemoteConfig] = useState<Record<string, any>>({});
   const [isMuted, setIsMuted] = useState(false);
   const [lang, setLang] = useState<Language>('en');
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const enableFacts = remoteConfig.enable_facts !== false;
   const initialTimerValue = Number(remoteConfig.starting_timer) || 100;
-
-  const playSFX = useCallback((url: string) => {
-    if (isMuted) return;
-    try {
-      const sfx = new Audio(url);
-      sfx.volume = 0.6;
-      sfx.play().catch(() => {});
-    } catch (e) {
-      console.error("SFX error", e);
-    }
-  }, [isMuted]);
 
   useEffect(() => {
     initYandexSDK().then(async (sdkInstance) => {
@@ -87,29 +69,20 @@ export default function GameContainer() {
         const config = await fetchRemoteConfig(sdkInstance);
         setRemoteConfig(config);
         
-        // Signal Yandex Games that the game is ready to be shown
         if (sdkInstance.features?.LoadingProgress?.ready) {
           sdkInstance.features.LoadingProgress.ready();
         }
       }
     });
-    
-    const audio = new Audio(BG_MUSIC_URL);
-    audio.loop = true;
-    audio.volume = 0.3;
-    audioRef.current = audio;
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
   }, []);
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
+  const playSound = useCallback((type: 'correct' | 'wrong' | 'start' | 'gameover') => {
+    if (isMuted || !synth) return;
+    switch (type) {
+      case 'correct': synth.playCorrect(); break;
+      case 'wrong': synth.playWrong(); break;
+      case 'start': synth.playStart(); break;
+      case 'gameover': synth.playGameOver(); break;
     }
   }, [isMuted]);
 
@@ -139,7 +112,7 @@ export default function GameContainer() {
 
   const endGame = useCallback(async (finalScore: number) => {
     setGameState('GAMEOVER');
-    playSFX(SFX_GAMEOVER_URL);
+    playSound('gameover');
     
     if (enableFacts) {
       setLoadingFact(true);
@@ -156,7 +129,7 @@ export default function GameContainer() {
     if (finalScore > 0) {
       submitScoreToLeaderboard(sdk, 'high_scores', finalScore);
     }
-  }, [sdk, lang, playSFX, enableFacts]);
+  }, [sdk, lang, playSound, enableFacts]);
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
@@ -180,12 +153,8 @@ export default function GameContainer() {
     setFeedback(null);
     generateLevel(0);
     setGameState('PLAYING');
-    playSFX(SFX_START_URL);
-
-    if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log("Audio playback blocked"));
-    }
-  }, [generateLevel, playSFX]);
+    playSound('start');
+  }, [generateLevel, playSound]);
 
   const handleChoice = useCallback((color: ColorOption) => {
     if (!level) return;
@@ -194,17 +163,17 @@ export default function GameContainer() {
       const nextScore = score + 1;
       setScore(nextScore);
       setFeedback('CORRECT');
-      playSFX(SFX_CORRECT_URL);
+      playSound('correct');
       setTimeout(() => setFeedback(null), 200);
       generateLevel(nextScore);
     } else {
       setFeedback('WRONG');
-      playSFX(SFX_WRONG_URL);
+      playSound('wrong');
       setTimeout(() => setFeedback(null), 400);
       const penalty = 15 + Math.min(15, Math.floor(score / 2));
       setTimer(t => Math.max(0, t - penalty));
     }
-  }, [level, generateLevel, score, playSFX]);
+  }, [level, generateLevel, score, playSound]);
 
   const toggleMute = () => setIsMuted(prev => !prev);
   const toggleLanguage = () => setLang(prev => prev === 'en' ? 'ru' : 'en');
