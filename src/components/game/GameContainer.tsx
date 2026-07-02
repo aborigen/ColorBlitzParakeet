@@ -65,8 +65,7 @@ export default function GameContainer() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Feature Toggles from Remote Config (with defaults)
-  const enableFacts = remoteConfig.enable_facts !== false; // Default true
+  const enableFacts = remoteConfig.enable_facts !== false;
   const initialTimerValue = Number(remoteConfig.starting_timer) || 100;
 
   const playSFX = useCallback((url: string) => {
@@ -145,7 +144,6 @@ export default function GameContainer() {
       }, 500);
     }
 
-    // Only show ads occasionally (e.g., 40% chance)
     if (Math.random() > 0.6) {
       await showFullscreenAd(sdk);
     }
@@ -214,7 +212,10 @@ export default function GameContainer() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between h-[100dvh] w-full p-4 max-w-md mx-auto relative overflow-hidden bg-background">
+    <div 
+      className="flex flex-col items-center justify-between h-[100dvh] w-full p-4 max-w-md mx-auto relative overflow-hidden bg-background select-none touch-none"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-3xl -z-10" />
 
